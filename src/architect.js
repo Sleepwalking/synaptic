@@ -135,6 +135,62 @@ var Architect = {
     this.trainer = new Trainer(this);
   },
 
+  // First-order Recurrent Neural Networks
+  RNN: function RNN() {
+
+    var args = Array.prototype.slice.call(arguments); // convert arguments to array
+    if (args.length < 3)
+      throw "Error: not enough layers (minimum 3) !!";
+
+    var inputs = args.shift();
+    var outputs = args.pop();
+    var layers = args;
+
+    var inputLayer = new Layer(inputs);
+    var hiddenLayers = [];
+    var outputLayer = new Layer(outputs);
+
+    var previous = null;
+
+    // generate layers
+    for (var layer in layers) {
+      // generate memory blocks (memory cell and respective gates)
+      var size = layers[layer];
+
+      var memoryCell = new Layer(size);
+      hiddenLayers.push(memoryCell);
+
+      // connections from input layer
+      var input = inputLayer.project(memoryCell);
+
+      // connections from previous memory-block layer to this one
+      if (previous != null) {
+        var cell = previous.project(memoryCell);
+      }
+
+      // connections from memory cell
+      var output = memoryCell.project(outputLayer);
+
+      // self-connection
+      var self = memoryCell.project(memoryCell, Layer.connectionType.ALL_TO_ALL);
+      
+      previous = memoryCell;
+    }
+
+    // input to output direct connection
+    inputLayer.project(outputLayer);
+
+    // set the layers of the neural network
+    this.set({
+      input: inputLayer,
+      hidden: hiddenLayers,
+      output: outputLayer
+    });
+
+    // trainer
+    this.trainer = new Trainer(this);
+  },
+
   // Liquid State Machine
   Liquid: function Liquid(inputs, hidden, outputs, connections, gates) {
 
