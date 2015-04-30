@@ -32,6 +32,12 @@ Layer.prototype = {
         var activation = neuron.activate(input[id]);
         activations.push(activation);
       }
+      if (this.selfconnected()) { // parallelled activation for self connected layers
+        for (var id in this.list) {
+          var neuron = this.list[id];
+          neuron.activation = neuron.newactivation;
+        }
+      }
     } else {
       for (var id in this.list) {
         var neuron = this.list[id];
@@ -212,12 +218,17 @@ Layer.connection = function LayerConnection(fromLayer, toLayer, type, weights) {
   this.list = [];
   this.size = 0;
 
-  if (typeof this.type == 'undefined')
-  {
+  if (typeof this.type == 'undefined') {
     if (fromLayer == toLayer)
       this.type = Layer.connectionType.ONE_TO_ONE;
     else
       this.type = Layer.connectionType.ALL_TO_ALL;
+  }
+
+  if (fromLayer == toLayer) {
+    for (var id in this.from.list) {
+      this.from.list[id].inselfconnectedlayer = true;
+    }
   }
 
   if (this.type == Layer.connectionType.ALL_TO_ALL) {

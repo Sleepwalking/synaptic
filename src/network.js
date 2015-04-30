@@ -146,11 +146,13 @@ Network.prototype = {
     for (var i in optimized.inputs)
       hardcode += "F[" + optimized.inputs[i] + "] = input[" + i + "]; ";
     for (var currentLayer in optimized.activation_sentences) {
-      if (optimized.activation_sentences[currentLayer].length > 0)
-      {
-        for (var currentNeuron in optimized.activation_sentences[currentLayer]){
+      if (optimized.activation_sentences[currentLayer].length > 0) {
+        for (var currentNeuron in optimized.activation_sentences[currentLayer]) {
           hardcode += optimized.activation_sentences[currentLayer][currentNeuron].join(" ");
           hardcode += optimized.trace_sentences[currentLayer][currentNeuron].join(" ");
+        }
+        for (var currentNeuron in optimized.activation_sentences[currentLayer]) { // if there is any
+          hardcode += optimized.update_sentences[currentLayer][currentNeuron].join(" ");
         }
       }
     }

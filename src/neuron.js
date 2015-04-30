@@ -23,7 +23,9 @@ function Neuron() {
   this.state = 0;
   this.old = 0;
   this.activation = 0;
+  this.newactivation = 0;
   this.selfconnection = new Neuron.connection(this, this, 0); // weight = 0 -> not connected
+  this.inselfconnectedlayer = false;
   this.squash = Neuron.squash.LOGISTIC;
   this.neighboors = {};
   this.bias = Math.random() * .2 - .1;
@@ -54,7 +56,9 @@ Neuron.prototype = {
     }
 
     // eq. 16
-    this.activation = this.squash(this.state);
+    this.newactivation = this.squash(this.state);
+    if (! this.inselfconnectedlayer)
+      this.activation = this.newactivation; // otherwise activation update is delayed to Layer.activate
 
     // f'(s)
     this.derivative = this.squash(this.state, true);
@@ -103,7 +107,7 @@ Neuron.prototype = {
       this.connections.gated[connection].gain = this.activation;
     }
 
-    return this.activation;
+    return this.newactivation;
   },
 
   // back-propagate the error
@@ -305,6 +309,7 @@ Neuron.prototype = {
     var store_activation = [];
     var store_trace = [];
     var store_propagation = [];
+    var store_update = [];
     var varID = optimized.memory || 0;
     var neurons = optimized.neurons || 1;
     var inputs = optimized.inputs || [];
@@ -314,6 +319,7 @@ Neuron.prototype = {
     var activation_sentences = optimized.activation_sentences || [];
     var trace_sentences = optimized.trace_sentences || [];
     var propagation_sentences = optimized.propagation_sentences || [];
+    var update_sentences = optimized.update_sentences || [];
     var layers = optimized.layers || { __count: 0, __neuron: 0 };
 
     // allocate sentences
@@ -328,9 +334,10 @@ Neuron.prototype = {
     allocate(activation_sentences);
     allocate(trace_sentences);
     allocate(propagation_sentences);
+    allocate(update_sentences);
     var currentLayer = layers.__count;
 
-    // get/reserve space in memory by creating a unique ID for a variablel
+    // get/reserve space in memory by creating a unique ID for a variable
     var getVar = function() {
       var args = Array.prototype.slice.call(arguments);
 
@@ -409,6 +416,7 @@ Neuron.prototype = {
       activation_sentences[currentLayer].push(store_activation);
       trace_sentences[currentLayer].push(store_trace);
       propagation_sentences[currentLayer].push(store_propagation);
+      update_sentences[currentLayer].push(store_update);
       var old = getVar(this, 'old');
       var state = getVar(this, 'state');
       var bias = getVar(this, 'bias');
@@ -440,6 +448,12 @@ Neuron.prototype = {
             input_weight, store_activation);
       }
       var derivative = getVar(this, 'derivative');
+      if(this.inselfconnectedlayer)
+      {
+        var oldactivation = activation;
+        activation = getVar(this, 'newactivation');
+        buildSentence(oldactivation, ' = ', activation, store_update);
+      }
       switch (this.squash) {
         case Neuron.squash.LOGISTIC:
           buildSentence(activation, ' = (1 / (1 + Math.exp(-', state, ')))',
@@ -732,6 +746,7 @@ Neuron.prototype = {
       activation_sentences: activation_sentences,
       trace_sentences: trace_sentences,
       propagation_sentences: propagation_sentences,
+      update_sentences: update_sentences,
       layers: layers
     }
   }
