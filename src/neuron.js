@@ -12,7 +12,6 @@ function Neuron() {
   };
   this.error = {
     responsibility: 0,
-    newresponsibility: 0,
     projected: 0,
     gated: 0
   };
@@ -121,7 +120,7 @@ Neuron.prototype = {
 
     // output neurons get their error from the enviroment
     if (isOutput)
-      this.error.responsibility = this.error.newresponsibility = this.error.projected = target - this.activation; // Eq. 10
+      this.error.responsibility = this.error.projected = target - this.activation; // Eq. 10
     
     else // the rest of the neuron compute their error responsibilities by backpropagation
     {
@@ -155,9 +154,7 @@ Neuron.prototype = {
       this.error.gated = this.derivative * error;
 
       // error responsibility - Eq. 23
-      this.error.newresponsibility = this.error.projected + this.error.gated;
-      if (! this.inselfconnectedlayer)
-        this.error.responsibility = this.error.newresponsibility;
+      this.error.responsibility = this.error.projected + this.error.gated;
     }
 
     // learning rate
@@ -178,7 +175,7 @@ Neuron.prototype = {
     }
 
     // adjust bias
-    this.bias += rate * this.error.newresponsibility;
+    this.bias += rate * this.error.responsibility;
   },
 
   project: function(neuron, weight) {
@@ -313,7 +310,6 @@ Neuron.prototype = {
     var store_trace = [];
     var store_propagation = [];
     var store_update = [];
-    var store_responsibility = [];
     var varID = optimized.memory || 0;
     var neurons = optimized.neurons || 1;
     var inputs = optimized.inputs || [];
@@ -324,7 +320,6 @@ Neuron.prototype = {
     var trace_sentences = optimized.trace_sentences || [];
     var propagation_sentences = optimized.propagation_sentences || [];
     var update_sentences = optimized.update_sentences || [];
-    var responsibility_sentences = optimized.responsibility_sentences || [];
     var layers = optimized.layers || { __count: 0, __neuron: 0 };
 
     // allocate sentences
@@ -340,7 +335,6 @@ Neuron.prototype = {
     allocate(trace_sentences);
     allocate(propagation_sentences);
     allocate(update_sentences);
-    allocate(responsibility_sentences);
     var currentLayer = layers.__count;
 
     // get/reserve space in memory by creating a unique ID for a variable
@@ -423,7 +417,6 @@ Neuron.prototype = {
       trace_sentences[currentLayer].push(store_trace);
       propagation_sentences[currentLayer].push(store_propagation);
       update_sentences[currentLayer].push(store_update);
-      responsibility_sentences[currentLayer].push(store_responsibility);
       var old = getVar(this, 'old');
       var state = getVar(this, 'state');
       var bias = getVar(this, 'bias');
@@ -455,7 +448,8 @@ Neuron.prototype = {
             input_weight, store_activation);
       }
       var derivative = getVar(this, 'derivative');
-      if(this.inselfconnectedlayer) {
+      if(this.inselfconnectedlayer)
+      {
         var oldactivation = activation;
         activation = getVar(this, 'newactivation');
         buildSentence(oldactivation, ' = ', activation, store_update);
@@ -602,12 +596,6 @@ Neuron.prototype = {
         }
         outputs.push(activation.id);
       } else {
-        if (this.inselfconnectedlayer) {
-          var oldresponsibility = responsibility;
-          responsibility = getVar(this, 'error', 'newresponsibility', this.error
-            .newresponsibility);
-          buildSentence(oldresponsibility, ' = ', responsibility, store_responsibility);
-        }
         if (!noProjections && !noGates) {
           var error = getVar('aux');
           for (var id in this.connections.projected) {
@@ -759,7 +747,6 @@ Neuron.prototype = {
       trace_sentences: trace_sentences,
       propagation_sentences: propagation_sentences,
       update_sentences: update_sentences,
-      responsibility_sentences: responsibility_sentences,
       layers: layers
     }
   }

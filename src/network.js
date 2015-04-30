@@ -151,8 +151,9 @@ Network.prototype = {
           hardcode += optimized.activation_sentences[currentLayer][currentNeuron].join(" ");
           hardcode += optimized.trace_sentences[currentLayer][currentNeuron].join(" ");
         }
-        for (var currentNeuron in optimized.activation_sentences[currentLayer]) // if there is any
+        for (var currentNeuron in optimized.activation_sentences[currentLayer]) { // if there is any
           hardcode += optimized.update_sentences[currentLayer][currentNeuron].join(" ");
+        }
       }
     }
     hardcode += " var output = []; "
@@ -164,12 +165,8 @@ Network.prototype = {
     for (var i in optimized.targets)
       hardcode += "F[" + optimized.targets[i] + "] = target[" + i + "]; ";
     for (var currentLayer in optimized.propagation_sentences)
-    {
-      for (var currentNeuron in optimized.responsibility_sentences[currentLayer]) // if there is any
-        hardcode += optimized.responsibility_sentences[currentLayer][currentNeuron].join(" ") + " ";
       for (var currentNeuron in optimized.propagation_sentences[currentLayer])
         hardcode += optimized.propagation_sentences[currentLayer][currentNeuron].join(" ") + " ";
-    }
     hardcode += " };\n";
     hardcode +=
       "var ownership = function(memoryBuffer){\nF = memoryBuffer;\nthis.memory = F;\n};\n";
@@ -186,7 +183,6 @@ Network.prototype = {
       propagate: optimized.propagation_sentences,
       trace: optimized.trace_sentences,
       update: optimized.update_sentences,
-      responsibility: optimized.responsibility_sentences,
       inputs: optimized.inputs,
       outputs: optimized.outputs,
       check_activation: this.activate,

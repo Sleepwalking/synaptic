@@ -32,12 +32,13 @@ Layer.prototype = {
         var activation = neuron.activate(input[id]);
         activations.push(activation);
       }
-      if (this.selfconnected()) // parallel activation for self connected layers
+      if (this.selfconnected()) { // parallel activation for self connected layers
         for (var id in this.list) {
           var neuron = this.list[id];
           neuron.activation = neuron.newactivation;
         }
-    } else { // output layer
+      }
+    } else {
       for (var id in this.list) {
         var neuron = this.list[id];
         var activation = neuron.activate();
@@ -54,17 +55,11 @@ Layer.prototype = {
       if (target.length != this.size)
         throw "TARGET size and LAYER size must be the same to propagate!";
 
-      if (this.selfconnected()) // parallel responsibility update for self connected layers
-        for (var id = this.list.length - 1; id >= 0; id--) {
-          var neuron = this.list[id];
-          neuron.error.responsibility = neuron.error.newresponsibility;
-        }
-
       for (var id = this.list.length - 1; id >= 0; id--) {
         var neuron = this.list[id];
         neuron.propagate(rate, target[id]);
       }
-    } else { // output layer
+    } else {
       for (var id = this.list.length - 1; id >= 0; id--) {
         var neuron = this.list[id];
         neuron.propagate(rate);
