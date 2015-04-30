@@ -405,6 +405,57 @@ Network.prototype = {
       connections: connections
     }
   },
+  
+  // export the topology into dot language which can be visualized as graphs using dot
+  /* example: ... console.log(net.toDotLang());
+              $ node example.js > example.dot
+              $ dot example.dot -Tpng > out.png
+  */
+  toDotLang: function(edgeconnection) {
+    if (! typeof edgeconnection)
+      edgeconnection = false;
+    var code = "digraph nn {\n    rankdir = BT\n";
+    var layers = [this.layers.input].concat(this.layers.hidden, this.layers.output);
+    for (var layer in layers) {
+      for (var to in layers[layer].connectedto) { // projections
+        var connection = layers[layer].connectedto[to];
+        var layerto = connection.to;
+        var size = connection.size;
+        var layerID = layers.indexOf(layers[layer]);
+        var layertoID = layers.indexOf(layerto);
+        /* http://stackoverflow.com/questions/26845540/connect-edges-with-graph-dot
+         * DOT does not support edge-to-edge connections
+         * This workaround produces somewhat weird graphs ...
+        */
+        if ( edgeconnection) {
+          if (connection.gatedfrom.length) {
+            var fakeNode = "fake" + layerID + "_" + layertoID;
+            code += "    " + fakeNode +
+              " [label = \"\", shape = point, width = 0.01, height = 0.01]\n";
+            code += "    " + layerID + " -> " + fakeNode + " [label = " + size + ", arrowhead = none]\n";
+            code += "    " + fakeNode + " -> " + layertoID + "\n";
+          } else
+            code += "    " + layerID + " -> " + layertoID + " [label = " + size + "]\n";
+          for (var from in connection.gatedfrom) { // gatings
+            var layerfrom = connection.gatedfrom[from].layer;
+            var type = connection.gatedfrom[from].type;
+            var layerfromID = layers.indexOf(layerfrom);
+            code += "    " + layerfromID + " -> " + fakeNode + " [color = blue]\n";
+          }
+        } else {
+          code += "    " + layerID + " -> " + layertoID + " [label = " + size + "]\n";
+          for (var from in connection.gatedfrom) { // gatings
+            var layerfrom = connection.gatedfrom[from].layer;
+            var type = connection.gatedfrom[from].type;
+            var layerfromID = layers.indexOf(layerfrom);
+            code += "    " + layerfromID + " -> " + layertoID + " [color = blue]\n";
+          }
+        }
+      }
+    }
+    code += "}\n";
+    return code;
+  },
 
   // returns a function that works as the activation of the network and can be used without depending on the library
   standalone: function() {

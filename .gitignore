@@ -7,3 +7,9 @@ node_modules
 # Tmp files.
 *~
 
+# Dot.
+*.dot
+
+# Other files.
+demo.js
+

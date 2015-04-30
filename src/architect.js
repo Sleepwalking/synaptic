@@ -104,8 +104,8 @@ var Architect = {
       var output = memoryCell.project(outputLayer);
 
       // self-connection
-      var self = memoryCell.project(memoryCell);
-
+      var self = memoryCell.project(memoryCell, Layer.connectionType.ONE_TO_ONE);
+      
       // peepholes
       memoryCell.project(inputGate, Layer.connectionType.ONE_TO_ONE);
       memoryCell.project(forgetGate, Layer.connectionType.ONE_TO_ONE);
