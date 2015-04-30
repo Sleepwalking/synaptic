@@ -182,6 +182,7 @@ Network.prototype = {
       activate: optimized.activation_sentences,
       propagate: optimized.propagation_sentences,
       trace: optimized.trace_sentences,
+      update: optimized.update_sentences,
       inputs: optimized.inputs,
       outputs: optimized.outputs,
       check_activation: this.activate,
@@ -420,9 +421,12 @@ Network.prototype = {
       activation += "F[" + data.inputs[i] + "] = input[" + i + "];\n";
 
     // build network activation
-    for (var neuron in data.activate)
+    for (var neuron in data.activate) { // shouldn't this be layer?
       for (var sentence in data.activate[neuron])
         activation += data.activate[neuron][sentence] + "\n";
+      for (var sentence in data.update[layer]) // if there's any
+        activation += data.update[neuron][sentence] + "\n";
+    }
 
     // build outputs
     activation += "var output = [];\n";
