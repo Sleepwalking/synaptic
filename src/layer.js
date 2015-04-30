@@ -32,7 +32,7 @@ Layer.prototype = {
         var activation = neuron.activate(input[id]);
         activations.push(activation);
       }
-      if (this.selfconnected()) { // parallelled activation for self connected layers
+      if (this.selfconnected()) { // parallel activation for self connected layers
         for (var id in this.list) {
           var neuron = this.list[id];
           neuron.activation = neuron.newactivation;
